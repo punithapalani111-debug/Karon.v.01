@@ -5,8 +5,8 @@ void main() {
   runApp(const KronaApp());
 }
 
-const Color oceanBlue = Color(0xFF00BFFF);
-const Color background = Color(0xFF101820);
+const Color kronaBlue = Color(0xFF00BFFF);
+const Color kronaBackground = Color(0xFF071522);
 
 class KronaApp extends StatelessWidget {
   const KronaApp({super.key});
@@ -14,12 +14,13 @@ class KronaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'A.KRONA',
       debugShowCheckedModeBanner: false,
+      title: 'A.KRONA',
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: background,
-        colorScheme: const ColorScheme.dark(
-          primary: oceanBlue,
+        scaffoldBackgroundColor: kronaBackground,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kronaBlue,
+          brightness: Brightness.dark,
         ),
       ),
       home: const LoginPage(),
@@ -35,32 +36,28 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final user = TextEditingController();
-  final pass = TextEditingController();
-
-  bool hidePassword = true;
+  final username = TextEditingController();
+  final password = TextEditingController();
   String error = '';
 
   void login() {
-    if (user.text.trim() == 'Krona' &&
-        pass.text == '18052013') {
+    if (username.text.trim() == 'Krona' &&
+        password.text == '18052013') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const Dashboard(),
+          builder: (_) => const DashboardPage(guest: false),
         ),
       );
     } else {
-      setState(() {
-        error = 'Incorrect username or password';
-      });
+      setState(() => error = 'Incorrect username or password');
     }
   }
 
   @override
   void dispose() {
-    user.dispose();
-    pass.dispose();
+    username.dispose();
+    password.dispose();
     super.dispose();
   }
 
@@ -73,68 +70,58 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.smart_toy,
-                size: 100,
-                color: oceanBlue,
-              ),
-              const SizedBox(height: 15),
+              const Icon(Icons.smart_toy, size: 90, color: kronaBlue),
+              const SizedBox(height: 12),
               const Text(
                 'A.KRONA',
                 style: TextStyle(
-                  fontSize: 34,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: oceanBlue,
+                  letterSpacing: 4,
+                  color: kronaBlue,
                 ),
               ),
-              const Text('ROBOT CONTROL SYSTEM'),
-              const SizedBox(height: 40),
+              const SizedBox(height: 8),
+              const Text('YOUR PERSONAL ROBOT'),
+              const SizedBox(height: 35),
               TextField(
-                controller: user,
+                controller: username,
                 decoration: const InputDecoration(
                   labelText: 'Username',
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 15),
               TextField(
-                controller: pass,
-                obscureText: hidePassword,
-                decoration: InputDecoration(
+                controller: password,
+                obscureText: true,
+                decoration: const InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock),
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      hidePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        hidePassword = !hidePassword;
-                      });
-                    },
-                  ),
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
                 ),
-                onSubmitted: (_) => login(),
               ),
               const SizedBox(height: 12),
-              Text(
-                error,
-                style: const TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 20),
+              Text(error, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: login,
-                  child: const Padding(
-                    padding: EdgeInsets.all(15),
-                    child: Text('LOGIN'),
-                  ),
+                  child: const Text('LOGIN'),
                 ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DashboardPage(guest: true),
+                    ),
+                  );
+                },
+                child: const Text('Continue as Guest'),
               ),
             ],
           ),
@@ -144,120 +131,57 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+class DashboardPage extends StatefulWidget {
+  final bool guest;
+
+  const DashboardPage({super.key, required this.guest});
 
   @override
-  State<Dashboard> createState() => _DashboardState();
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardState extends State<Dashboard> {
+class _DashboardPageState extends State<DashboardPage> {
   int selected = 0;
-  bool connected = false;
-  bool voice = true;
-  bool guest = false;
-  bool demo = false;
-  bool sleep = false;
-
-  final pages = const [
-    HomePage(),
-    RemotePage(),
-    VoicePage(),
-    ModesPage(),
-    SettingsPage(),
-  ];
+  bool voiceEnabled = false;
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      const HomePage(),
+      RemotePage(guest: widget.guest),
+      VoicePage(enabled: voiceEnabled),
+      ModesPage(guest: widget.guest),
+      SettingsPage(guest: widget.guest),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('A.KRONA'),
-        backgroundColor: const Color(0xFF172B3A),
+        backgroundColor: const Color(0xFF102A40),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.pushAndRemoveUntil(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const LoginPage(),
-                ),
-                (route) => false,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
               );
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          SwitchListTile(
-            title: const Text('Robot Connection'),
-            subtitle: Text(
-              connected ? 'Connected (demo)' : 'Offline',
-            ),
-            value: connected,
-            onChanged: (v) {
-              setState(() => connected = v);
-            },
-          ),
-          Expanded(
-            child: IndexedStack(
-              index: selected,
-              children: [
-                const HomePage(),
-                const RemotePage(),
-                VoicePage(
-                  enabled: voice,
-                  onChanged: (v) {
-                    setState(() => voice = v);
-                  },
-                ),
-                ModesPage(
-                  guest: guest,
-                  demo: demo,
-                  sleep: sleep,
-                  onGuest: (v) {
-                    setState(() => guest = v);
-                  },
-                  onDemo: (v) {
-                    setState(() => demo = v);
-                  },
-                  onSleep: (v) {
-                    setState(() => sleep = v);
-                  },
-                ),
-                const SettingsPage(),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: pages[selected],
       bottomNavigationBar: NavigationBar(
         selectedIndex: selected,
-        onDestinationSelected: (v) {
-          setState(() => selected = v);
+        onDestinationSelected: (index) {
+          setState(() => selected = index);
         },
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.gamepad),
-            label: 'Remote',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.mic),
-            label: 'Voice',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tune),
-            label: 'Modes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.gamepad), label: 'Remote'),
+          NavigationDestination(icon: Icon(Icons.mic), label: 'Voice'),
+          NavigationDestination(icon: Icon(Icons.tune), label: 'Modes'),
+          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
@@ -270,122 +194,155 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'HELLO! I AM KRONA',
-            style: TextStyle(
-              fontSize: 21,
-              color: oceanBlue,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.smart_toy, size: 110, color: kronaBlue),
+            const SizedBox(height: 20),
+            const Text(
+              'HELLO, I AM KRONA',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 25),
-          Container(
-            width: 190,
-            height: 125,
-            decoration: BoxDecoration(
-              color: const Color(0xFF172B3A),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: oceanBlue,
-                width: 2,
+            const SizedBox(height: 10),
+            const Text('Your personal robot assistant'),
+            const SizedBox(height: 25),
+            const Card(
+              child: ListTile(
+                leading: Icon(Icons.wifi_off, color: Colors.orange),
+                title: Text('Robot connection'),
+                subtitle: Text('Not connected'),
               ),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                RobotEye(),
-                RobotEye(),
-              ],
+            const Text(
+              'This is an app prototype. Robot connection is not yet configured.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white60),
             ),
-          ),
-          const SizedBox(height: 25),
-          const Text('A.KRONA ROBOT ASSISTANT'),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class RobotEye extends StatelessWidget {
-  const RobotEye({super.key});
+class RemotePage extends StatefulWidget {
+  final bool guest;
+
+  const RemotePage({super.key, required this.guest});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 55,
-      decoration: BoxDecoration(
-        color: oceanBlue,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: oceanBlue,
-            blurRadius: 15,
-          ),
-        ],
-      ),
-    );
-  }
+  State<RemotePage> createState() => _RemotePageState();
 }
 
-class RemotePage extends StatelessWidget {
-  const RemotePage({super.key});
+class _RemotePageState extends State<RemotePage> {
+  String status = 'No command sent';
 
   @override
   Widget build(BuildContext context) {
+    void command(String value) {
+      setState(() => status = '$value selected (demo only)');
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'REMOTE CONTROL',
-            style: TextStyle(
-              fontSize: 22,
-              color: oceanBlue,
-            ),
-          ),
+          const Icon(Icons.gamepad, size: 65, color: kronaBlue),
           const SizedBox(height: 20),
-          const Icon(
-            Icons.keyboard_arrow_up,
-            size: 60,
-            color: oceanBlue,
+          const Text('ROBOT CONTROL', style: TextStyle(fontSize: 23)),
+          const SizedBox(height: 20),
+          IconButton(
+            onPressed: widget.guest ? null : () => command('Up'),
+            icon: const Icon(Icons.arrow_upward),
+            iconSize: 45,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.keyboard_arrow_left,
-                  size: 60, color: oceanBlue),
-              SizedBox(width: 25),
-              Icon(Icons.stop_circle,
-                  size: 45, color: Colors.red),
-              SizedBox(width: 25),
-              Icon(Icons.keyboard_arrow_right,
-                  size: 60, color: oceanBlue),
+            children: [
+              IconButton(
+                onPressed: widget.guest ? null : () => command('Left'),
+                icon: const Icon(Icons.arrow_back),
+                iconSize: 45,
+              ),
+              const SizedBox(width: 55),
+              IconButton(
+                onPressed: widget.guest ? null : () => command('Right'),
+                icon: const Icon(Icons.arrow_forward),
+                iconSize: 45,
+              ),
             ],
           ),
-          const Icon(
-            Icons.keyboard_arrow_down,
-            size: 60,
-            color: oceanBlue,
+          IconButton(
+            onPressed: widget.guest ? null : () => command('Down'),
+            icon: const Icon(Icons.arrow_downward),
+            iconSize: 45,
           ),
-          const Text('Demo interface only'),
+          const SizedBox(height: 15),
+          Text(status),
+          if (widget.guest)
+            const Text('Guest mode: controls disabled',
+                style: TextStyle(color: Colors.orange)),
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              'These buttons are a visual demo and do not control a real robot.',
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class VoicePage extends StatelessWidget {
+class VoicePage extends StatefulWidget {
   final bool enabled;
-  final ValueChanged<bool> onChanged;
 
-  const VoicePage({
-    super.key,
-    required this.enabled,
-    required this.onChanged,
-  });
+  const VoicePage({super.key, required this.enabled});
+
+  @override
+  State<VoicePage> createState() => _VoicePageState();
+}
+
+class _VoicePageState extends State<VoicePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.mic, size: 90, color: kronaBlue),
+          const SizedBox(height: 20),
+          const Text('VOICE ASSISTANT', style: TextStyle(fontSize: 24)),
+          const SizedBox(height: 15),
+          Text(widget.enabled ? 'Voice enabled' : 'Voice not activated'),
+          const Text('Wake phrase: Hey Krona'),
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              'Microphone recognition is not implemented in this prototype.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ModesPage extends StatefulWidget {
+  final bool guest;
+
+  const ModesPage({super.key, required this.guest});
+
+  @override
+  State<ModesPage> createState() => _ModesPageState();
+}
+
+class _ModesPageState extends State<ModesPage> {
+  String mode = 'Normal';
 
   @override
   Widget build(BuildContext context) {
@@ -393,104 +350,69 @@ class VoicePage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.mic,
-            size: 85,
-            color: oceanBlue,
-          ),
-          const Text(
-            'VOICE CONTROL',
-            style: TextStyle(fontSize: 22),
-          ),
-          Switch(
-            value: enabled,
-            onChanged: onChanged,
-          ),
-          Text(enabled ? 'Voice Enabled' : 'Voice Disabled'),
-          const Text('Wake phrase: Hey Krona'),
-          const Text('English • Tamil • Hindi'),
+          const Icon(Icons.tune, size: 75, color: kronaBlue),
+          const SizedBox(height: 20),
+          const Text('SELECT ROBOT MODE', style: TextStyle(fontSize: 22)),
+          const SizedBox(height: 20),
+          for (final item in ['Normal', 'Quiet', 'Guest'])
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: widget.guest
+                      ? null
+                      : () => setState(() => mode = item),
+                  child: Text(item),
+                ),
+              ),
+            ),
+          const SizedBox(height: 15),
+          Text('Selected mode: $mode'),
+          if (widget.guest)
+            const Text('Guest mode: changes disabled',
+                style: TextStyle(color: Colors.orange)),
         ],
       ),
     );
   }
 }
 
-class ModesPage extends StatelessWidget {
+class SettingsPage extends StatelessWidget {
   final bool guest;
-  final bool demo;
-  final bool sleep;
-  final ValueChanged<bool> onGuest;
-  final ValueChanged<bool> onDemo;
-  final ValueChanged<bool> onSleep;
 
-  const ModesPage({
-    super.key,
-    required this.guest,
-    required this.demo,
-    required this.sleep,
-    required this.onGuest,
-    required this.onDemo,
-    required this.onSleep,
-  });
+  const SettingsPage({super.key, required this.guest});
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text(
-          'ROBOT MODES',
-          style: TextStyle(
-            fontSize: 22,
-            color: oceanBlue,
-          ),
+        const Icon(Icons.settings, size: 75, color: kronaBlue),
+        const SizedBox(height: 20),
+        const Center(
+          child: Text('SETTINGS', style: TextStyle(fontSize: 24)),
         ),
-        SwitchListTile(
-          title: const Text('Guest Mode'),
-          value: guest,
-          onChanged: onGuest,
-        ),
-        SwitchListTile(
-          title: const Text('Demo Mode'),
-          value: demo,
-          onChanged: onDemo,
-        ),
-        SwitchListTile(
-          title: const Text('Sleep Mode'),
-          value: sleep,
-          onChanged: onSleep,
-        ),
-      ],
-    );
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: const [
-        Text(
-          'SETTINGS',
-          style: TextStyle(
-            fontSize: 22,
-            color: oceanBlue,
-          ),
-        ),
+        const SizedBox(height: 20),
         ListTile(
-          leading: Icon(Icons.wifi),
-          title: Text('Wi-Fi Settings'),
+          leading: const Icon(Icons.person),
+          title: const Text('Account'),
+          subtitle: Text(guest ? 'Guest account' : 'Owner prototype account'),
         ),
-        ListTile(
+        const ListTile(
+          leading: Icon(Icons.language),
+          title: Text('Language'),
+          subtitle: Text('English / Tamil / Hindi - planned'),
+        ),
+        const ListTile(
           leading: Icon(Icons.security),
           title: Text('Security'),
+          subtitle: Text('Secure cloud login - not configured'),
         ),
-        ListTile(
-          leading: Icon(Icons.info),
+        const ListTile(
+          leading: Icon(Icons.info_outline),
           title: Text('About A.KRONA'),
+          subtitle: Text('Robot companion app prototype'),
         ),
       ],
     );
