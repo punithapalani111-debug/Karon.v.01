@@ -1,33 +1,11 @@
-name: Build A.KRONA APK
+permissions:
+  contents: write
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+# ... (keep all your existing jobs and build steps as they are) ...
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Get repository files
-        uses: actions/checkout@v4
-
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          channel: stable
-
-      - name: Create Android project
-        run: |
-          flutter create --platforms=android --project-name a_krona --org com.akrona /tmp/krona
-          cp "$GITHUB_WORKSPACE/lib/main.dart" /tmp/krona/lib/main.dart
-          cd /tmp/krona
-          flutter build apk --release
-
-      - name: Save APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: A-KRONA-APK
-          path: /tmp/krona/build/app/outputs/flutter-apk/app-release.apk
+          tag_name: v1.0.${{ github.run_number }}
+          name: A.KRONA v1.0.${{ github.run_number }}
+          files: build/app/outputs/flutter-apk/*.apk
